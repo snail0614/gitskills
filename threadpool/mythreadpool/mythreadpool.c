@@ -18,13 +18,13 @@ int				g_work_thread_high_ratio = 3;	/*任务与线程峰值比例*/
 int				g_work_thread_low_ratio = 1;	/*任务与线程低谷比例*/
 
 void pool_init(int thread_num){
-int i;
+	int i;
 	if(thread_num > g_max_thread_num)
 		thread_num = g_max_thread_num;
 	if(thread_num < g_min_thread_num)
 		thread_num = g_min_thread_num;
 
-pthread_attr_t attr;
+	pthread_attr_t attr;
 	if(pthread_attr_init(&attr)){
 		perror("pthread_attr-init");
 		exit(1);
@@ -64,7 +64,7 @@ pthread_attr_t attr;
 
 int thread_queue_add_thread(p_thread_node *thread_queue,pthread_t thread_id,int *count){
 	pthread_mutex_lock(&(g_pool->thread_queue_lock));
-thread_node *new_node = (p_thread_node *)malloc(sizeof(p_thread_node));
+	thread_node *new_node = (p_thread_node *)malloc(sizeof(p_thread_node));
 	if(NULL == new_node){
 		printf("malloc for new thread queue node faile\n");
 		pthread_mutex_unlock(&(g_pool->thread_queue_lock));
@@ -82,7 +82,7 @@ thread_node *new_node = (p_thread_node *)malloc(sizeof(p_thread_node));
 	}
 
 
-thread_node *p = *thread_queue;
+	thread_node *p = *thread_queue;
 	new_node->next = p;
 	*(thread_queue) = new_node;
 	(*count)++;
@@ -94,7 +94,7 @@ thread_node *p = *thread_queue;
 
 int thread_queue_remove_node(p_thread_node *thread_queue, pthread_t thread_id,int *count){
 	pthread_mutex_lock(&(g_pool->thread_queue_remove_lock));
-p_thread_node current_node,pre_node;
+	p_thread_node current_node,pre_node;
 	if(NULL == *(thread_queue)){
 		printf("remove a thread node from queue failed\n");
 		pthread_mutex_unlock(&(g_pool->thread_queue_remove_lock));
@@ -103,11 +103,10 @@ p_thread_node current_node,pre_node;
 
 	current_node = *(thread_queue);
 	pre_node = *(thread_queue);
-int i = 1;
+	int i = 1;
 	while(i < g_pool->thread_num && current_node != NULL){
 		i++;
 		if(thread_id == current_node->thread_id){
-		//	printf("线程 %d发现 ,删除\n",thread_id);
 			break;
 		}
 		pre_node = current_node;
@@ -143,7 +142,7 @@ int i = 1;
 }
 
 int pool_add_work(void*(*process)(int arg),int arg){
-work_node *new_work = (work_node *)malloc(sizeof(work_node));
+	work_node *new_work = (work_node *)malloc(sizeof(work_node));
 	if(new_work == NULL){
 		return -1;
 	}			
@@ -173,8 +172,8 @@ work_node *member = g_pool->queue_work;
 
 
 void pool_add_thread(int thread_num){
-int i;
-pthread_attr_t attr;
+	int i;
+	pthread_attr_t attr;
 	if(pthread_attr_init(&attr)){
 		perror("pthread_attr_init err\n");
 		exit(1);
@@ -208,15 +207,13 @@ void pool_remove_thread(int remove_thread_num){
 }
 
 void *thread_manage(void *arg){
-int optvalue;
-int thread_num;
+	int optvalue;
+	int thread_num;
 	while(1){
 		if(g_pool->queue_work_num > g_work_thread_high_ratio * g_pool->thread_num){
 			optvalue = 1;
 			thread_num = 2 * g_pool->queue_work_num /(g_work_thread_high_ratio
 					+ g_work_thread_low_ratio) - g_pool->thread_num;
-/*			thread_num = (g_pool->queue_work_num - g_work_thread_high_ratio * 
-					g_pool->thread_num) / g_work_thread_high_ratio;*/
 		}
 		else if(g_pool->queue_work_num < g_work_thread_low_ratio * g_pool->thread_num){
 			optvalue = 2;
@@ -249,8 +246,8 @@ int pool_destroy(){
 
 	pthread_cond_broadcast(&(g_pool->work_queue_ready));
 
-p_thread_node *q = g_pool->thread_queue;
-p_thread_node *p = q;
+	p_thread_node *q = g_pool->thread_queue;
+	p_thread_node *p = q;
 
 	g_pool->thread_queue = NULL;
 
@@ -278,7 +275,6 @@ void *thread_run(void *arg){
 		pthread_mutex_lock(&(g_pool->thread_run_lock));
 		while(g_pool->is_remove == 0 && g_pool->queue_work_num == 0 && g_pool->shutdown == 0){
 			pthread_cond_wait(&(g_pool->work_queue_ready),&(g_pool->thread_run_lock));
-//			printf("+++++++++++++++++++++++++++++++++++++++++++++++++++++++线程%u\n",pthread_self());
 		}
 		/*如果销毁线程池，删除所有线程*/
 		if(g_pool->shutdown){
@@ -302,10 +298,9 @@ void *thread_run(void *arg){
 		}
 		/*回调函数，执行任务*/
 		if(g_pool->queue_work_num != 0){	
-//			printf("----------------------------------------------------任务数 %d  \n",g_pool->queue_work_num);
 			assert(g_pool->queue_work != NULL);
 			g_pool->queue_work_num--;
-work_node *work = g_pool->queue_work;
+			work_node *work = g_pool->queue_work;
 			g_pool->queue_work = work->next;
 			pthread_mutex_unlock(&(g_pool->thread_run_lock));
 			(*(work->process))(work->arg);
@@ -320,22 +315,20 @@ work_node *work = g_pool->queue_work;
 }
 
 void *myprocess(int arg){
-	//printf("线程 %u, working on task%d\n",pthread_self(),arg);
 	printf("*****************线程 %u执行任务%d中,池中线程数%d,任务数%d\n",pthread_self(),arg,g_pool->thread_num,g_pool->queue_work_num);
 	sleep(1);
 	return NULL;
 }
 
-int main(int argc,char *argv[]){
-pthread_t manage_tid;
+	int main(int argc,char *argv[]){
+	pthread_t manage_tid;
 	pool_init(g_def_thread_num);
 	sleep(3);
 	pthread_create(&manage_tid,NULL,thread_manage,NULL);
 
-int i;
+	int i;
 	for(i = 0;  ; i++){
 		pool_add_work(myprocess,i);
-	//	sleep(1);
 		if(i % 20 == 0){
 			sleep(1);
 		}else if(i % 10 == 0){
