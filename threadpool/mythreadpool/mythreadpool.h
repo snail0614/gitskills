@@ -54,18 +54,10 @@ typedef struct {
 	thread_node *thread_queue;
 	int thread_num;
 	int queue_work_num;
+	int remove_num;
+	int is_remove;
 	work_node *queue_work;
 }thread_pool;
-
-
-/**
- *线程取消
- */
-typedef struct {
-	int is_revoke;
-	int revoke_count;
-	int revoke_num;
-}thread_revoke;
 
 
 
@@ -80,9 +72,6 @@ void *thread_run(void *arg);
 /*初始化线程池*/
 void pool_init(int thread_num);
 
-/*初始化撤销信息*/
-void thread_revoke_init();  
-
 /*销毁线程池*/
 int pool_destroy();
 
@@ -93,7 +82,7 @@ void pool_add_thread(int add_thread_num);
 int thread_queue_add_thread(p_thread_node *thread_queue,pthread_t thread_id,int *count);
 
 /*撤销线程*/
-void pool_revoke_thread(int revoke_thread_num);
+void pool_remove_thread(int remove_thread_num);
 
 /*从线程队列中删除线程*/
 int thread_queue_remove_node(p_thread_node *thread_queue, pthread_t thread_id, int *remove_num);
@@ -102,7 +91,6 @@ int thread_queue_remove_node(p_thread_node *thread_queue, pthread_t thread_id, i
 /*******************全局变量声明********************/
 
 extern thread_pool		*g_pool;					/*线程池*/
-extern thread_revoke	*g_thread_revoke;			/*线程取消*/
 extern int				g_max_thread_num;			/*最大线程数*/
 extern int				g_min_thread_num;			/*最小线程数*/
 extern int				g_def_thread_num;			/*默认线程数*/
